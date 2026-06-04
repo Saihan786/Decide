@@ -4,7 +4,7 @@
 Allow a writer to create a session and reviewers to join it by code.
 
 ## Scope
-- `Session` and `Reviewer` models
+- `Session`, `Writer`, and `Reviewer` models
 - Writer lands on home page and creates a session — generates a unique join code
 - Writer sees the join code and a waiting screen showing who has joined so far
 - Reviewer navigates to `/join/<code>`, enters their name, and joins the session
