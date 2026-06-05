@@ -8,7 +8,8 @@ def generate_join_code() -> str:
 
 
 class Writer(models.Model):
-    name = models.CharField(max_length=100)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
 
 
 class Session(models.Model):
@@ -27,8 +28,9 @@ class Session(models.Model):
 
 
 class Reviewer(models.Model):
-    name = models.CharField(max_length=100)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name="reviewers")
 
     class Meta:
-        unique_together = ("name", "session")
+        unique_together = ("first_name", "last_name", "session")

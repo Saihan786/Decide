@@ -96,22 +96,26 @@
             color: #fff;
         }
 
-        .join-form input {
+        .card form input {
             display: block;
             width: 100%;
             padding: 0.65rem 1rem;
             margin-bottom: 1rem;
             border: 1px solid #B0BEC5;
             border-radius: 6px;
-            font-size: 1.1rem;
-            text-align: center;
-            letter-spacing: 0.15em;
+            font-size: 0.95rem;
             color: #263238;
         }
 
-        .join-form input:focus {
+        .card form input:focus {
             outline: 2px solid #004D40;
             border-color: #004D40;
+        }
+
+        .card form input[name="join_code"] {
+            text-align: center;
+            letter-spacing: 0.15em;
+            font-size: 1.1rem;
         }
     </style>
 </head>
@@ -127,14 +131,21 @@
         <div class="card">
             <h2>New Session</h2>
             <p>Write a document and invite reviewers to give their feedback.</p>
-            <a href="/new/" class="btn btn-primary">Start as Writer</a>
+            <form action="{% url 'new_session_page' %}" method="post">
+                {% csrf_token %}
+                <input type="text" name="first_name" placeholder="First name" required>
+                <input type="text" name="last_name" placeholder="Last name" required>
+                <button type="submit" class="btn btn-primary">Start as Writer</button>
+            </form>
         </div>
 
         <div class="card">
             <h2>Join Session</h2>
             <p>Enter the 6-digit code shared by the writer to join as a reviewer.</p>
-            <form class="join-form" action="/join/" method="post">
+            <form action="{% url 'join_session_page' %}" method="post">
                 {% csrf_token %}
+                <input type="text" name="first_name" placeholder="First name" required>
+                <input type="text" name="last_name" placeholder="Last name" required>
                 <input type="text" name="join_code" maxlength="6" placeholder="000000" pattern="\d{6}" required>
                 <button type="submit" class="btn btn-outline">Join as Reviewer</button>
             </form>
