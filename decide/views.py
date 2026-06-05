@@ -23,4 +23,7 @@ def join_session(request):
         last_name=request.POST["last_name"],
         session=session,
     )
-    return HttpResponse(f"Joined as {reviewer.first_name} {reviewer.last_name}")
+    return render(request, "waiting_room.html", {
+        "reviewers": session.reviewers.all(),
+        "current_reviewer": reviewer,
+    })
