@@ -21,5 +21,7 @@ from decide import views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", views.index, name="home"),
+    path("", views.home, name="home"),
+    path("/new/<code>", views.make_session, name="new_session_page"),
+    path("/join/<code>", views.join_session, name="join_session_page"),
 ]

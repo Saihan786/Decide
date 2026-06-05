@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Georgia, serif;
+            background: #F7FAFC;
+            color: #263238;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            color: #004D40;
+            letter-spacing: 0.05em;
+        }
+
+        header p {
+            margin-top: 0.5rem;
+            color: #546E7A;
+            font-size: 1.1rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 2.5rem 3rem;
+            width: 280px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .card h2 {
+            color: #004D40;
+            margin-bottom: 0.75rem;
+            font-size: 1.5rem;
+        }
+
+        .card p {
+            color: #546E7A;
+            font-size: 0.95rem;
+            margin-bottom: 1.75rem;
+            line-height: 1.5;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: Georgia, serif;
+            cursor: pointer;
+            text-decoration: none;
+            border: none;
+        }
+
+        .btn-primary {
+            background: #FFB300;
+            color: #1A202C;
+            font-weight: bold;
+        }
+
+        .btn-primary:hover { background: #D4AF37; }
+
+        .btn-outline {
+            background: transparent;
+            color: #004D40;
+            border: 2px solid #004D40;
+            font-weight: bold;
+        }
+
+        .btn-outline:hover {
+            background: #004D40;
+            color: #fff;
+        }
+
+        .join-form input {
+            display: block;
+            width: 100%;
+            padding: 0.65rem 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #B0BEC5;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            text-align: center;
+            letter-spacing: 0.15em;
+            color: #263238;
+        }
+
+        .join-form input:focus {
+            outline: 2px solid #004D40;
+            border-color: #004D40;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Decide</h1>
+        <p>Collaborative document review, made simple.</p>
+    </header>
+
+    <div class="actions">
+
+        <div class="card">
+            <h2>New Session</h2>
+            <p>Write a document and invite reviewers to give their feedback.</p>
+            <a href="/new/" class="btn btn-primary">Start as Writer</a>
+        </div>
+
+        <div class="card">
+            <h2>Join Session</h2>
+            <p>Enter the 6-digit code shared by the writer to join as a reviewer.</p>
+            <form class="join-form" action="/join/" method="post">
+                {% csrf_token %}
+                <input type="text" name="join_code" maxlength="6" placeholder="000000" pattern="\d{6}" required>
+                <button type="submit" class="btn btn-outline">Join as Reviewer</button>
+            </form>
+        </div>
+
+    </div>
+
+</body>
+</html>
