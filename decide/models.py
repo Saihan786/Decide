@@ -11,6 +11,11 @@ class Writer(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["first_name", "last_name"], name="unique_writer"),
+        ]
+
 
 class Session(models.Model):
     STATUS_CHOICES = [
@@ -39,4 +44,4 @@ class Reviewer(models.Model):
 class Document(models.Model):
     session = models.OneToOneField(Session, on_delete=models.CASCADE, related_name="document")
     revision = models.IntegerField(default=1)
-    content = models.CharField()
+    content = models.CharField(blank=True)

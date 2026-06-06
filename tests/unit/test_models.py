@@ -15,6 +15,12 @@ class WriterTests(TestCase):
         Session.objects.create(writer=writer)
         Session.objects.create(writer=writer)
         self.assertEqual(writer.sessions.count(), 2)
+        self.assertEqual(writer.last_name, "Ali")
+
+    def test_writer_uniqueness(self):
+        Writer.objects.create(first_name="Saudia", last_name="Ali")
+        with self.assertRaises(IntegrityError):
+            Writer.objects.create(first_name="Saudia", last_name="Ali")
 
 
 class ReviewerTests(TestCase):
@@ -100,6 +106,10 @@ class DocumentTests(TestCase):
         doc.content = "v2"
         doc.save()
         self.assertEqual(Document.objects.get(pk=doc.pk).content, "v2")
+
+    def test_document_content_can_be_blank(self):
+        Document.objects.create(session=self.session)
+        self.assertEqual(Document.objects.count(), 1)
 
     def test_deleting_session_deletes_document(self):
         Document.objects.create(session=self.session, content="Hello world")
