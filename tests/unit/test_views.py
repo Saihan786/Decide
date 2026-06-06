@@ -2,24 +2,6 @@ from django.test import TestCase
 from decide.models import Session, Writer, Reviewer, Document
 
 
-class MakeSessionViewTests(TestCase):
-
-    def test_make_session_creates_writer_and_session(self):
-        self.client.post("/new/", {"first_name": "Saudia", "last_name": "Begum"})
-        self.assertEqual(Writer.objects.count(), 1)
-        self.assertEqual(Session.objects.count(), 1)
-
-    def test_make_session_links_writer_to_session(self):
-        self.client.post("/new/", {"first_name": "Saudia", "last_name": "Begum"})
-        session = Session.objects.first()
-        self.assertIsNotNone(session.writer)
-
-    def test_make_session_returns_join_code_in_response(self):
-        response = self.client.post("/new/", {"first_name": "Saudia", "last_name": "Begum"})
-        session = Session.objects.first()
-        self.assertContains(response, session.join_code)
-
-
 class JoinSessionViewTests(TestCase):
 
     def setUp(self):

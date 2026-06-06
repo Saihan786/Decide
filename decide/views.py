@@ -7,15 +7,6 @@ def home(request):
     return render(request, "home.html")
 
 
-def make_session(request):
-    writer = Writer.objects.create(
-        first_name=request.POST["first_name"],
-        last_name=request.POST["last_name"],
-    )
-    session = Session.objects.create(writer=writer)
-    return HttpResponse(session.join_code)
-
-
 def join_session(request):
     session = get_object_or_404(Session, join_code=request.POST["join_code"])
     reviewer = Reviewer.objects.create(
@@ -51,10 +42,9 @@ def write_document(request):
 
     context = {
         "writer": session.writer,
+        "session": session,
         "revision": document.revision,
         "document": document.content,
     }
 
-    return HttpResponse()
-
-    # return render(request, "write_document.html", context)
+    return render(request, "document_editing.html", context)
