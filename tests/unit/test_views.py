@@ -1,5 +1,5 @@
 from django.test import TestCase
-from decide.models import Session, Writer, Reviewer
+from decide.models import Session, Writer, Reviewer, Document
 
 
 class MakeSessionViewTests(TestCase):
@@ -44,3 +44,32 @@ class JoinSessionViewTests(TestCase):
             "/join/", {"join_code": self.session.join_code, "first_name": "Yusuf", "last_name": "Khan"}
         )
         self.assertEqual(response.status_code, 200)
+
+
+class WriteDocumentViewTests(TestCase):
+
+    def setUp(self):
+        writer = Writer.objects.create(first_name="Saudia", last_name="Begum")
+        self.session = Session.objects.create(writer=writer)
+
+    def test_no_join_code_creates_new_session_and_document(self):
+        self.client.post("/document/", {"first_name": "Saudia", "last_name": "Begum"})
+        self.assertEqual(Session.objects.count(), 2)
+        self.assertEqual(Document.objects.count(), 1)
+
+    def test_no_join_code_links_document_to_new_session(self):
+        self.client.post("/document/", {"first_name": "Saudia", "last_name": "Begum"})
+        new_session = Session.objects.latest("pk")
+        self.assertEqual(Document.objects.first().session, new_session)
+
+    def test_valid_join_code_does_not_create_new_session_or_document(self):
+        Document.objects.create(session=self.session, content="existing content")
+        self.client.post(
+            "/document/", {"first_name": "Saudia", "last_name": "Begum", "join_code": self.session.join_code}
+        )
+        self.assertEqual(Session.objects.count(), 1)
+        self.assertEqual(Document.objects.count(), 1)
+
+    def test_invalid_join_code_returns_404(self):
+        response = self.client.post("/document/", {"first_name": "Saudia", "last_name": "Begum", "join_code": "000000"})
+        self.assertEqual(response.status_code, 404)

@@ -24,4 +24,5 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("new/", views.make_session, name="new_session_page"),
     path("join/", views.join_session, name="join_session_page"),
+    path("document/", views.write_document, name="write_doc_page"),
 ]
