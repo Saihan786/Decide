@@ -34,3 +34,9 @@ class Reviewer(models.Model):
 
     class Meta:
         unique_together = ("first_name", "last_name", "session")
+
+
+class Document(models.Model):
+    session = models.OneToOneField(Session, on_delete=models.CASCADE, related_name="document")
+    revision = models.IntegerField(default=1)
+    content = models.CharField()

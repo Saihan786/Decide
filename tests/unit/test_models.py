@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.db.utils import IntegrityError
-from decide.models import Session, Writer, Reviewer
+from decide.models import Session, Writer, Reviewer, Document
 
 
 class WriterTests(TestCase):
@@ -75,3 +75,33 @@ class SessionTests(TestCase):
         session = Session.objects.create(writer=self.writer)
         self.writer.delete()
         self.assertFalse(Session.objects.filter(pk=session.pk).exists())
+
+
+class DocumentTests(TestCase):
+
+    def setUp(self):
+        writer = Writer.objects.create(first_name="Saudia", last_name="Ali")
+        self.session = Session.objects.create(writer=writer)
+
+    def test_document_is_linked_to_session(self):
+        doc = Document.objects.create(session=self.session, content="Hello world")
+        self.assertEqual(doc.session, self.session)
+
+    def test_document_default_revision_is_1(self):
+        doc = Document.objects.create(session=self.session, content="Hello world")
+        self.assertEqual(doc.revision, 1)
+
+    def test_document_stores_content(self):
+        doc = Document.objects.create(session=self.session, content="<p>Draft text</p>")
+        self.assertEqual(Document.objects.get(pk=doc.pk).content, "<p>Draft text</p>")
+
+    def test_document_content_can_be_updated(self):
+        doc = Document.objects.create(session=self.session, content="v1")
+        doc.content = "v2"
+        doc.save()
+        self.assertEqual(Document.objects.get(pk=doc.pk).content, "v2")
+
+    def test_deleting_session_deletes_document(self):
+        Document.objects.create(session=self.session, content="Hello world")
+        self.session.delete()
+        self.assertFalse(Document.objects.exists())
