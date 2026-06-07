@@ -55,3 +55,27 @@ class WriteDocumentViewTests(TestCase):
     def test_invalid_join_code_returns_404(self):
         response = self.client.post("/document/", {"first_name": "Saudia", "last_name": "Begum", "join_code": "000000"})
         self.assertEqual(response.status_code, 404)
+
+
+class SaveDocumentViewTests(TestCase):
+
+    def setUp(self):
+        writer = Writer.objects.create(first_name="Saudia", last_name="Begum")
+        self.session = Session.objects.create(writer=writer)
+        self.document = Document.objects.create(session=self.session, content="original content")
+
+    def test_save_updates_document_content(self):
+        self.client.post("/document/save/", {"join_code": self.session.join_code, "content": "updated content"})
+        self.assertEqual(Document.objects.get(pk=self.document.pk).content, "updated content")
+
+    def test_save_does_not_create_new_document(self):
+        self.client.post("/document/save/", {"join_code": self.session.join_code, "content": "updated content"})
+        self.assertEqual(Document.objects.count(), 1)
+
+    def test_save_invalid_join_code_returns_404(self):
+        response = self.client.post("/document/save/", {"join_code": "000000", "content": "updated content"})
+        self.assertEqual(response.status_code, 404)
+
+    def test_save_returns_200(self):
+        response = self.client.post("/document/save/", {"join_code": self.session.join_code, "content": "updated content"})
+        self.assertEqual(response.status_code, 200)

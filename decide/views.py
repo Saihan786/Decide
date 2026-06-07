@@ -48,3 +48,11 @@ def write_document(request):
     }
 
     return render(request, "document_editing.html", context)
+
+
+def save_document(request):
+    session = get_object_or_404(Session, join_code=request.POST["join_code"])
+    document = get_object_or_404(Document, session=session)
+    document.content = request.POST["content"]
+    document.save()
+    return HttpResponse(status=200)

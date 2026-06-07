@@ -64,7 +64,7 @@
         }
 
         #editor {
-            height: 480px;
+            height: 320px;
             font-family: Georgia, serif;
             font-size: 1rem;
             border: none;
@@ -84,9 +84,17 @@
         .editor-actions {
             display: flex;
             justify-content: flex-end;
+            align-items: center;
             gap: 1rem;
             padding: 1rem 1.5rem;
             border-top: 1px solid #E0E0E0;
+        }
+
+        /* Added a style for our status text notification */
+        #status-message {
+            font-family: Georgia, serif;
+            font-size: 0.95rem;
+            margin-right: auto; /* Pushes status to the left, buttons stay on the right */
         }
 
         .btn {
@@ -135,14 +143,16 @@
             <span>Join code: <span class="join-code">{{ session.join_code }}</span></span>
         </div>
 
-        <div id="editor">{{ document }}</div>
+        <div id="editor"></div>
 
         <div class="editor-actions">
+            <div id="status-message"></div>
+
             <form id="save-form" action="{% url 'save_document' %}" method="post">
                 {% csrf_token %}
                 <input type="hidden" name="join_code" value="{{ session.join_code }}">
                 <input type="hidden" name="content" id="save-content">
-                <button type="submit" class="btn btn-outline">Save</button>
+                <button type="submit" class="btn btn-outline" id="save-btn">Save</button>
             </form>
             <form id="submit-form" action="{% url 'submit_document' %}" method="post">
                 {% csrf_token %}
@@ -157,11 +167,41 @@
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <script>
         const quill = new Quill('#editor', { theme: 'snow' });
+        quill.clipboard.dangerouslyPasteHTML('{{ document|escapejs }}');
+        const statusMsg = document.getElementById('status-message');
 
-        document.getElementById('save-form').addEventListener('submit', function () {
-            document.getElementById('save-content').value = quill.root.innerHTML;
+        // --- UPDATED SAVE FORM LOGIC ---
+        document.getElementById('save-form').addEventListener('submit', function (e) {
+            e.preventDefault(); // <-- Stops the page from changing/refreshing
+            
+            statusMsg.style.color = '#546E7A';
+            statusMsg.innerText = "Saving...";
+
+            // 1. Put the Quill editor text into the hidden input
+            const contentInput = document.getElementById('save-content');
+            contentInput.value = quill.root.innerHTML;
+
+            // 2. Send the form data to Django silently in the background
+            fetch(this.action, {
+                method: this.method,
+                body: new FormData(this)
+            })
+            .then(response => {
+                if (response.ok) {
+                    statusMsg.style.color = '#004D40';
+                    statusMsg.innerText = "✓ Draft saved";
+                } else {
+                    statusMsg.style.color = '#D32F2F';
+                    statusMsg.innerText = "Error saving draft.";
+                }
+            })
+            .catch(error => {
+                statusMsg.style.color = '#D32F2F';
+                statusMsg.innerText = "Network error.";
+            });
         });
 
+        // Leave your submit form exactly as it is (assuming you WANT it to redirect upon submission)
         document.getElementById('submit-form').addEventListener('submit', function () {
             document.getElementById('submit-content').value = quill.root.innerHTML;
         });

@@ -24,6 +24,6 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("join/", views.join_session, name="join_session_page"),
     path("document/", views.write_document, name="write_doc_page"),
-    path("document/TBD", views.home, name="save_document"),
+    path("document/save/", views.save_document, name="save_document"),
     path("document/TBD", views.home, name="submit_document"),
 ]
