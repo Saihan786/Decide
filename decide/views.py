@@ -14,14 +14,27 @@ def join_session(request):
         last_name=request.POST["last_name"],
         session=session,
     )
-    return render(
-        request,
-        "waiting_room.html",
-        {
-            "reviewers": session.reviewers.all(),
-            "current_reviewer": reviewer,
-        },
-    )
+
+    if session.status == Session.Status.REVIEW:
+
+        return render(request, "document_under_review.html", {"session": session})
+    else:
+        return render(
+            request,
+            "waiting_room.html",
+            {
+                "reviewers": session.reviewers.all(),
+                "current_reviewer": reviewer,
+            },
+        )
+
+
+def submit_review(request):
+    return HttpResponse(status=200)
+
+
+def submit_comment(request):
+    return HttpResponse(status=200)
 
 
 def write_document(request):
@@ -48,7 +61,7 @@ def write_document(request):
     }
 
     if session.status == Session.Status.REVIEW:
-        return render(request, "document_under_review.html", {"session": session})
+        return render(request, "document_under_review_waiting_room.html", {"session": session})
     else:
         return render(request, "document_editing.html", context)
 
@@ -65,4 +78,4 @@ def submit_document(request):
     session = get_object_or_404(Session, join_code=request.POST["join_code"])
     session.status = Session.Status.REVIEW
     session.save()
-    return render(request, "document_under_review.html", {"session": session})
+    return render(request, "document_under_review_waiting_room.html", {"session": session})

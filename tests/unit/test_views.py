@@ -27,6 +27,16 @@ class JoinSessionViewTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
+    def test_join_session_document_under_review(self):
+        self.session.status = Session.Status.REVIEW
+        self.session.save()
+
+        response = self.client.post(
+            "/join/", {"join_code": self.session.join_code, "first_name": "Yusuf", "last_name": "Khan"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "document_under_review.html")
+
 
 class WriteDocumentViewTests(TestCase):
 
@@ -56,7 +66,7 @@ class WriteDocumentViewTests(TestCase):
         response = self.client.post("/document/", {"first_name": "Saudia", "last_name": "Begum", "join_code": "000000"})
         self.assertEqual(response.status_code, 404)
 
-    def test_correct_redirect_for_document_under_review(self):
+    def test_correct_redirect_for_document_under_review_waiting_room(self):
         Document.objects.create(session=self.session, content="existing content")
         self.session.status = Session.Status.REVIEW
         self.session.save()
@@ -66,7 +76,7 @@ class WriteDocumentViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "document_under_review.html")
+        self.assertTemplateUsed(response, "document_under_review_waiting_room.html")
 
 
 class SaveDocumentViewTests(TestCase):
