@@ -47,7 +47,10 @@ def write_document(request):
         "document": document.content,
     }
 
-    return render(request, "document_editing.html", context)
+    if session.status == Session.Status.REVIEW:
+        return render(request, "document_under_review.html", {"session": session})
+    else:
+        return render(request, "document_editing.html", context)
 
 
 def save_document(request):
@@ -56,3 +59,10 @@ def save_document(request):
     document.content = request.POST["content"]
     document.save()
     return HttpResponse(status=200)
+
+
+def submit_document(request):
+    session = get_object_or_404(Session, join_code=request.POST["join_code"])
+    session.status = Session.Status.REVIEW
+    session.save()
+    return render(request, "document_under_review.html", {"session": session})

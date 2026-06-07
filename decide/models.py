@@ -18,16 +18,15 @@ class Writer(models.Model):
 
 
 class Session(models.Model):
-    STATUS_CHOICES = [
-        ("WRITING", "Writing"),
-        ("REVIEW", "Review"),
-        ("RESULT", "Result"),
-    ]
+    class Status(models.TextChoices):
+        WRITING = "WRITING", "Writing"
+        REVIEW = "REVIEW", "Review"
+        RESULT = "RESULT", "Result"
 
     writer = models.ForeignKey(Writer, on_delete=models.CASCADE, related_name="sessions")
     join_code = models.CharField(unique=True, editable=False, max_length=6, default=generate_join_code)
     status = models.CharField(
-        choices=STATUS_CHOICES,
+        choices=Status.choices,
         default="WRITING",
     )
 

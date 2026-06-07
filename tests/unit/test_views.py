@@ -56,6 +56,18 @@ class WriteDocumentViewTests(TestCase):
         response = self.client.post("/document/", {"first_name": "Saudia", "last_name": "Begum", "join_code": "000000"})
         self.assertEqual(response.status_code, 404)
 
+    def test_correct_redirect_for_document_under_review(self):
+        Document.objects.create(session=self.session, content="existing content")
+        self.session.status = Session.Status.REVIEW
+        self.session.save()
+
+        response = self.client.post(
+            "/document/", {"first_name": "Saudia", "last_name": "Begum", "join_code": self.session.join_code}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "document_under_review.html")
+
 
 class SaveDocumentViewTests(TestCase):
 
@@ -77,5 +89,27 @@ class SaveDocumentViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_save_returns_200(self):
-        response = self.client.post("/document/save/", {"join_code": self.session.join_code, "content": "updated content"})
+        response = self.client.post(
+            "/document/save/", {"join_code": self.session.join_code, "content": "updated content"}
+        )
+        self.assertEqual(response.status_code, 200)
+
+
+class SubmitDocumentViewTests(TestCase):
+
+    def setUp(self):
+        writer = Writer.objects.create(first_name="Saudia", last_name="Begum")
+        self.session = Session.objects.create(writer=writer)
+        self.document = Document.objects.create(session=self.session, content="original content")
+
+    def test_submit_sets_document_submitted(self):
+        self.client.post("/document/submit/", {"join_code": self.session.join_code})
+        self.assertTrue(self.session.status, Session.Status.REVIEW)
+
+    def test_submit_invalid_join_code_returns_404(self):
+        response = self.client.post("/document/submit/", {"join_code": "000000"})
+        self.assertEqual(response.status_code, 404)
+
+    def test_submit_returns_200(self):
+        response = self.client.post("/document/submit/", {"join_code": self.session.join_code})
         self.assertEqual(response.status_code, 200)

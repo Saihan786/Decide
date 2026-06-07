@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Decide — Waiting Room</title>
+    <title>Decide — Under Review</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -65,6 +65,22 @@
             line-height: 1.5;
         }
 
+        .join-code {
+            font-size: 1.75rem;
+            letter-spacing: 0.2em;
+            color: #004D40;
+            font-weight: bold;
+            margin-bottom: 2rem;
+        }
+
+        .reviewers-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #90A4AE;
+            margin-bottom: 0.75rem;
+        }
+
         .reviewers {
             list-style: none;
             text-align: left;
@@ -91,19 +107,6 @@
             background: #FFB300;
             flex-shrink: 0;
         }
-
-        .reviewers li.you {
-            font-weight: bold;
-            color: #004D40;
-        }
-
-        .reviewers-label {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #90A4AE;
-            margin-bottom: 0.75rem;
-        }
     </style>
 </head>
 <body>
@@ -114,18 +117,17 @@
     </header>
 
     <div class="card">
-        <h2>Waiting Room</h2>
-        <p class="waiting-msg">The writer is preparing the document. You'll be notified when it's ready to review.</p>
+        <h2>Under Review</h2>
+        <p class="waiting-msg">Your document has been submitted. Waiting for all reviewers to respond.</p>
 
-        <p class="reviewers-label">Joined so far</p>
+        <p class="join-code">{{ session.join_code }}</p>
+
+        <p class="reviewers-label">Reviewers</p>
         <ul class="reviewers">
-            {% for reviewer in reviewers %}
-                <li {% if reviewer == current_reviewer %}class="you"{% endif %}>
-                    {{ reviewer.first_name }} {{ reviewer.last_name }}
-                    {% if reviewer == current_reviewer %}(you){% endif %}
-                </li>
+            {% for reviewer in session.reviewers.all %}
+                <li>{{ reviewer.first_name }} {{ reviewer.last_name }}</li>
             {% empty %}
-                <li>No one has joined yet.</li>
+                <li>No reviewers have joined yet.</li>
             {% endfor %}
         </ul>
     </div>
