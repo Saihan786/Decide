@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.db.utils import IntegrityError
-from decide.models import Session, Writer, Reviewer, Document
+from decide.models import Session, Writer, Reviewer, Document, Review
 
 
 class WriterTests(TestCase):
@@ -115,3 +115,59 @@ class DocumentTests(TestCase):
         Document.objects.create(session=self.session, content="Hello world")
         self.session.delete()
         self.assertFalse(Document.objects.exists())
+
+
+class ReviewTests(TestCase):
+
+    def setUp(self):
+        writer = Writer.objects.create(first_name="Saudia", last_name="Ali")
+        self.session = Session.objects.create(writer=writer)
+        self.document = Document.objects.create(session=self.session)
+        self.reviewer = Reviewer.objects.create(first_name="Yusuf", last_name="Ahmed", session=self.session)
+
+    def test_review_is_linked_to_reviewer_and_document(self):
+        review = Review.objects.create(reviewer=self.reviewer, document=self.document, approved=True, reason="Well written.")
+        self.assertEqual(review.reviewer, self.reviewer)
+        self.assertEqual(review.document, self.document)
+
+    def test_review_stores_approval_decision(self):
+        review = Review.objects.create(reviewer=self.reviewer, document=self.document, approved=True, reason="Clear and concise.")
+        self.assertTrue(Review.objects.get(pk=review.pk).approved)
+
+    def test_review_stores_reason(self):
+        review = Review.objects.create(reviewer=self.reviewer, document=self.document, approved=False, reason="Needs more detail.")
+        self.assertEqual(Review.objects.get(pk=review.pk).reason, "Needs more detail.")
+
+    def test_review_comments_can_be_blank(self):
+        review = Review.objects.create(reviewer=self.reviewer, document=self.document, approved=True, reason="Looks good.")
+        self.assertEqual(review.comments, "")
+
+    def test_review_stores_comments(self):
+        review = Review.objects.create(reviewer=self.reviewer, document=self.document, approved=True, reason="Looks good.", comments="Minor typo on line 2.")
+        self.assertEqual(Review.objects.get(pk=review.pk).comments, "Minor typo on line 2.")
+
+    def test_reviewer_can_only_review_document_once_per_revision(self):
+        Review.objects.create(reviewer=self.reviewer, document=self.document, approved=True, reason="Good.")
+        with self.assertRaises(IntegrityError):
+            Review.objects.create(reviewer=self.reviewer, document=self.document, approved=False, reason="Actually not good.")
+
+    def test_reviewer_can_review_same_document_on_new_revision(self):
+        Review.objects.create(reviewer=self.reviewer, document=self.document, approved=False, reason="Needs work.")
+        self.document.revision = 2
+        self.document.save()
+        Review.objects.create(reviewer=self.reviewer, document=self.document, approved=True, reason="Much better.")
+        self.assertEqual(Review.objects.filter(reviewer=self.reviewer).count(), 2)
+
+    def test_review_snapshots_document_revision_on_create(self):
+        review = Review.objects.create(reviewer=self.reviewer, document=self.document, approved=True, reason="Good.")
+        self.assertEqual(review.document_revision_snapshot, self.document.revision)
+
+    def test_deleting_reviewer_deletes_review(self):
+        Review.objects.create(reviewer=self.reviewer, document=self.document, approved=True, reason="Good.")
+        self.reviewer.delete()
+        self.assertFalse(Review.objects.exists())
+
+    def test_deleting_document_deletes_review(self):
+        Review.objects.create(reviewer=self.reviewer, document=self.document, approved=True, reason="Good.")
+        self.document.delete()
+        self.assertFalse(Review.objects.exists())

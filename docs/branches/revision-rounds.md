@@ -1,9 +1,3 @@
-Ah, I see what you mean! Standard Markdown relies on the platform (like GitHub, Notion, or your project management tool) to render those `[ ]` characters into interactive, clickable checkboxes.
-
-If you are pasting this into a place that doesn't automatically convert Markdown syntax into UI elements, we can use literal Unicode checkbox characters (`☐` or `☑`) instead.
-
-Here is the text updated with actual checkbox characters:
-
 # feature/revision-rounds
 
 ## Goal
