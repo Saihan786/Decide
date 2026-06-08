@@ -160,7 +160,7 @@
             {% endfor %}
         </ul>
 
-        {% if session.document.reviews.exists %}
+        {% if session.reviewers.count > 0 and session.document.reviews.count == session.reviewers.count %}
             <form action="{% url 'result_phase' %}" method="post">
                 {% csrf_token %}
                 <input type="hidden" name="join_code" value="{{ session.join_code }}">

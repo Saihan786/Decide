@@ -9,13 +9,16 @@ def home(request):
 
 def join_session(request):
     session = get_object_or_404(Session, join_code=request.POST["join_code"])
-    reviewer = Reviewer.objects.create(
+    reviewer, _ = Reviewer.objects.get_or_create(
         first_name=request.POST["first_name"],
         last_name=request.POST["last_name"],
         session=session,
     )
 
     if session.status == Session.Status.REVIEW:
+        already_reviewed = reviewer.review.filter(document=session.document).exists()
+        if already_reviewed:
+            return render(request, "home.html", {"message": f"{reviewer.first_name}, your review has already been submitted."})
         return render(
             request,
             "document_under_review.html",

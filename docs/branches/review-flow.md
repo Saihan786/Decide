@@ -8,7 +8,7 @@ Allow each reviewer to independently read the document and submit their response
 - ☑ Reviewer sees the document rendered as read-only
 - ☑ Reviewer submits: approve or disapprove with a written reason, plus any comments
 - ☑ Reviewers cannot see each other's responses
-- ☐ Once all reviewers have submitted, session transitions to the result phase
+- ☑ Once all reviewers have submitted, session transitions to the result phase
 - ☑ Writer sees a waiting screen (HTMX polling) until all reviews are in
 
 ## Outcome
