@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decide — Review</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Georgia, serif;
+            background: #F7FAFC;
+            color: #263238;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.25rem 1rem;
+            overflow: hidden;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            color: #004D40;
+            letter-spacing: 0.05em;
+        }
+
+        header h1 a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        header h1 a:hover { opacity: 0.8; }
+
+        header p {
+            margin-top: 0.25rem;
+            color: #546E7A;
+            font-size: 0.95rem;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            gap: 1.25rem;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .panel {
+            background: #fff;
+            border: 1px solid #E0E0E0;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .panel-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.65rem 1.25rem;
+            border-bottom: 1px solid #E0E0E0;
+            font-size: 0.85rem;
+            color: #546E7A;
+            flex-shrink: 0;
+        }
+
+        .document-body {
+            padding: 1.25rem 1.5rem;
+            line-height: 1.7;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .response-form {
+            padding: 1rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .response-form h3 {
+            color: #004D40;
+            font-size: 1rem;
+        }
+
+        .decision {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .decision label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .response-form textarea {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #B0BEC5;
+            border-radius: 6px;
+            font-family: Georgia, serif;
+            font-size: 0.9rem;
+            color: #263238;
+            resize: none;
+        }
+
+        .response-form textarea:focus {
+            outline: 2px solid #004D40;
+            border-color: #004D40;
+        }
+
+        .form-label {
+            font-size: 0.8rem;
+            color: #546E7A;
+            margin-bottom: -0.25rem;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            padding: 0.75rem 1.25rem;
+            border-top: 1px solid #E0E0E0;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.6rem 1.75rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: Georgia, serif;
+            cursor: pointer;
+            text-decoration: none;
+            border: none;
+        }
+
+        .btn-primary {
+            background: #FFB300;
+            color: #1A202C;
+            font-weight: bold;
+        }
+
+        .btn-primary:hover { background: #D4AF37; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><a href="{% url 'home' %}">Decide</a></h1>
+        <p>Collaborative document review, made simple.</p>
+    </header>
+
+    <div class="wrapper">
+
+        <div class="panel">
+            <div class="panel-meta">
+                <span>{{ document.session.writer.first_name }} {{ document.session.writer.last_name }} &mdash; Revision {{ document.revision }}</span>
+                <span>{{ reviewer.first_name }} {{ reviewer.last_name }} &mdash; {{ session.reviewers.count }} reviewer{{ session.reviewers.count|pluralize }} &mdash; <strong style="color:#004D40;letter-spacing:0.1em">{{ session.join_code }}</strong></span>
+            </div>
+            <div class="document-body">
+                {{ document.content|safe }}
+            </div>
+        </div>
+
+        <div class="panel">
+            <form method="post" action="{% url 'submit_review' %}">
+                {% csrf_token %}
+                <input type="hidden" name="reviewer_id" value="{{ reviewer.pk }}">
+                <input type="hidden" name="document_id" value="{{ document.pk }}">
+
+                <div class="response-form">
+                    <h3>Your Response</h3>
+
+                    <div class="decision">
+                        <label>
+                            <input type="radio" name="approved" value="true" required> Approve
+                        </label>
+                        <label>
+                            <input type="radio" name="approved" value="false"> Disapprove
+                        </label>
+                    </div>
+
+                    <p class="form-label">Reason <span style="color:#D32F2F">*</span></p>
+                    <textarea name="reason" rows="3" required placeholder="Briefly explain your decision..."></textarea>
+
+                    <p class="form-label">Comments <span style="color:#90A4AE">(optional)</span></p>
+                    <textarea name="comments" rows="4" placeholder="Any additional notes or feedback..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Submit Review</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+</body>
+</html>

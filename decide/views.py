@@ -16,8 +16,15 @@ def join_session(request):
     )
 
     if session.status == Session.Status.REVIEW:
-
-        return render(request, "document_under_review.html", {"session": session})
+        return render(
+            request,
+            "document_under_review.html",
+            {
+                "session": session,
+                "reviewer": reviewer,
+                "document": session.document,
+            },
+        )
     else:
         return render(
             request,
@@ -30,10 +37,6 @@ def join_session(request):
 
 
 def submit_review(request):
-    return HttpResponse(status=200)
-
-
-def submit_comment(request):
     return HttpResponse(status=200)
 
 
@@ -79,3 +82,7 @@ def submit_document(request):
     session.status = Session.Status.REVIEW
     session.save()
     return render(request, "document_under_review_waiting_room.html", {"session": session})
+
+
+def result_phase(request):
+    return HttpResponse()

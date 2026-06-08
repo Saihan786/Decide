@@ -98,14 +98,38 @@
             gap: 0.6rem;
         }
 
-        .reviewers li::before {
-            content: "";
+        .dot {
             display: inline-block;
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #FFB300;
             flex-shrink: 0;
+        }
+
+        .dot-pending { background: #FFB300; }
+        .dot-done    { background: #2E7D32; }
+
+        .btn {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: Georgia, serif;
+            cursor: pointer;
+            border: none;
+            background: #FFB300;
+            color: #1A202C;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        .btn:hover:not(:disabled) { background: #D4AF37; }
+
+        .btn:disabled {
+            background: #E0E0E0;
+            color: #90A4AE;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -125,11 +149,26 @@
         <p class="reviewers-label">Reviewers</p>
         <ul class="reviewers">
             {% for reviewer in session.reviewers.all %}
-                <li>{{ reviewer.first_name }} {{ reviewer.last_name }}</li>
+                {% with submitted=reviewer.review.exists %}
+                <li>
+                    <span class="dot {% if submitted %}dot-done{% else %}dot-pending{% endif %}"></span>
+                    {{ reviewer.first_name }} {{ reviewer.last_name }}
+                </li>
+                {% endwith %}
             {% empty %}
                 <li>No reviewers have joined yet.</li>
             {% endfor %}
         </ul>
+
+        {% if session.document.reviews.exists %}
+            <form action="{% url 'result_phase' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="join_code" value="{{ session.join_code }}">
+                <button type="submit" class="btn">View Results</button>
+            </form>
+        {% else %}
+            <button class="btn" disabled>View Results</button>
+        {% endif %}
     </div>
 
 </body>

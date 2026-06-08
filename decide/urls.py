@@ -23,7 +23,9 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", views.home, name="home"),
     path("join/", views.join_session, name="join_session_page"),
+    path("join/submit-review/", views.submit_review, name="submit_review"),
     path("document/", views.write_document, name="write_doc_page"),
     path("document/save/", views.save_document, name="save_document"),
     path("document/submit/", views.submit_document, name="submit_document"),
+    path("document/result/", views.result_phase, name="result_phase"),
 ]
