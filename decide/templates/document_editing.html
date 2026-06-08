@@ -209,8 +209,16 @@
         });
 
         // Leave your submit form exactly as it is (assuming you WANT it to redirect upon submission)
-        document.getElementById('submit-form').addEventListener('submit', function () {
-            document.getElementById('submit-content').value = quill.root.innerHTML;
+        document.getElementById('submit-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const content = quill.root.innerHTML;
+            document.getElementById('submit-content').value = content;
+
+            const saveData = new FormData(document.getElementById('save-form'));
+            saveData.set('content', content);
+
+            fetch("{% url 'save_document' %}", { method: 'POST', body: saveData })
+                .then(() => this.submit());
         });
     </script>
 
