@@ -1,6 +1,6 @@
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
-from decide.models import Writer, Session, Reviewer, Document
+from decide.models import Writer, Session, Reviewer, Document, Review
 
 
 def home(request):
@@ -37,13 +37,21 @@ def join_session(request):
 
 
 def submit_review(request):
-    return HttpResponse(status=200)
+    reviewer = get_object_or_404(Reviewer, pk=request.POST["reviewer_id"])
+    document = get_object_or_404(Document, pk=request.POST["document_id"])
+    approved = request.POST["approved"] == "true"
+    reason = request.POST["reason"]
+    comments = request.POST.get("comments", "")
+
+    Review.objects.create(reviewer=reviewer, document=document, approved=approved, reason=reason, comments=comments)
+
+    return render(request, "home.html")
 
 
 def write_document(request):
     first_name = request.POST["first_name"]
     last_name = request.POST["last_name"]
-    join_code = request.POST.get("join_code")
+    join_code = request.POST.get("join_code", "")
 
     if join_code:
         session = get_object_or_404(Session, join_code=join_code)

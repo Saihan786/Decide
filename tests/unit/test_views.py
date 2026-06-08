@@ -1,5 +1,5 @@
 from django.test import TestCase
-from decide.models import Session, Writer, Reviewer, Document
+from decide.models import Session, Writer, Reviewer, Document, Review
 
 
 class JoinSessionViewTests(TestCase):
@@ -7,6 +7,7 @@ class JoinSessionViewTests(TestCase):
     def setUp(self):
         writer = Writer.objects.create(first_name="Saudia", last_name="Begum")
         self.session = Session.objects.create(writer=writer)
+        Document.objects.create(session=self.session, content="original content")
 
     def test_join_session_creates_reviewer(self):
         self.client.post("/join/", {"join_code": self.session.join_code, "first_name": "Yusuf", "last_name": "Khan"})
@@ -122,4 +123,92 @@ class SubmitDocumentViewTests(TestCase):
 
     def test_submit_returns_200(self):
         response = self.client.post("/document/submit/", {"join_code": self.session.join_code})
+        self.assertEqual(response.status_code, 200)
+
+
+class SubmitReviewViewTests(TestCase):
+
+    def setUp(self):
+        writer = Writer.objects.create(first_name="Saudia", last_name="Begum")
+        self.session = Session.objects.create(writer=writer, status=Session.Status.REVIEW)
+        self.document = Document.objects.create(session=self.session, content="some content")
+        self.reviewer = Reviewer.objects.create(first_name="Yusuf", last_name="Khan", session=self.session)
+
+    def test_submit_review_creates_review(self):
+        self.client.post(
+            "/join/submit-review/",
+            {
+                "reviewer_id": self.reviewer.pk,
+                "document_id": self.document.pk,
+                "approved": "true",
+                "reason": "Well written.",
+                "comments": "",
+            },
+        )
+        self.assertEqual(Review.objects.count(), 1)
+
+    def test_submit_review_links_to_reviewer_and_document(self):
+        self.client.post(
+            "/join/submit-review/",
+            {
+                "reviewer_id": self.reviewer.pk,
+                "document_id": self.document.pk,
+                "approved": "true",
+                "reason": "Well written.",
+                "comments": "",
+            },
+        )
+        review = Review.objects.first()
+        self.assertEqual(review.reviewer, self.reviewer)
+        self.assertEqual(review.document, self.document)
+
+    def test_submit_review_stores_approval_and_reason(self):
+        self.client.post(
+            "/join/submit-review/",
+            {
+                "reviewer_id": self.reviewer.pk,
+                "document_id": self.document.pk,
+                "approved": "true",
+                "reason": "Well written.",
+            },
+        )
+        review = Review.objects.first()
+        self.assertTrue(review.approved)
+        self.assertEqual(review.reason, "Well written.")
+
+    def test_submit_review_stores_comments(self):
+        self.client.post(
+            "/join/submit-review/",
+            {
+                "reviewer_id": self.reviewer.pk,
+                "document_id": self.document.pk,
+                "approved": "false",
+                "reason": "Needs work.",
+                "comments": "Check paragraph 2.",
+            },
+        )
+        self.assertEqual(Review.objects.first().comments, "Check paragraph 2.")
+
+    def test_submit_review_invalid_reviewer_returns_404(self):
+        response = self.client.post(
+            "/join/submit-review/",
+            {
+                "reviewer_id": 9999,
+                "document_id": self.document.pk,
+                "approved": "true",
+                "reason": "Good.",
+            },
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_submit_review_returns_200(self):
+        response = self.client.post(
+            "/join/submit-review/",
+            {
+                "reviewer_id": self.reviewer.pk,
+                "document_id": self.document.pk,
+                "approved": "true",
+                "reason": "Good.",
+            },
+        )
         self.assertEqual(response.status_code, 200)
