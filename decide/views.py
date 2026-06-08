@@ -16,9 +16,14 @@ def join_session(request):
     )
 
     if session.status == Session.Status.REVIEW:
-        already_reviewed = reviewer.review.filter(document=session.document).exists()
+        already_reviewed = reviewer.review.filter(
+            document=session.document,
+            document_revision_snapshot=session.document.revision,
+        ).exists()
         if already_reviewed:
-            return render(request, "home.html", {"message": f"{reviewer.first_name}, your review has already been submitted."})
+            return render(
+                request, "home.html", {"message": f"{reviewer.first_name}, your review has already been submitted."}
+            )
         return render(
             request,
             "document_under_review.html",
@@ -28,7 +33,7 @@ def join_session(request):
                 "document": session.document,
             },
         )
-    else:
+    elif session.status == Session.Status.WRITING:
         return render(
             request,
             "waiting_room.html",
@@ -36,6 +41,10 @@ def join_session(request):
                 "reviewers": session.reviewers.all(),
                 "current_reviewer": reviewer,
             },
+        )
+    else:
+        return render(
+            request, "home.html", {"message": f"{reviewer.first_name}, the document can no longer be reviewed."}
         )
 
 
@@ -52,8 +61,8 @@ def submit_review(request):
 
 
 def write_document(request):
-    first_name = request.POST["first_name"]
-    last_name = request.POST["last_name"]
+    first_name = request.POST.get("first_name", "")
+    last_name = request.POST.get("last_name", "")
     join_code = request.POST.get("join_code", "")
 
     if join_code:
@@ -67,6 +76,13 @@ def write_document(request):
         session = Session.objects.create(writer=writer)
         document = Document.objects.create(session=session)
 
+    if request.POST.get("new_revision") == "true":
+        session.status = Session.Status.WRITING
+        session.save()
+
+        document.revision += 1
+        document.save()
+
     context = {
         "writer": session.writer,
         "session": session,
@@ -75,9 +91,25 @@ def write_document(request):
     }
 
     if session.status == Session.Status.REVIEW:
-        return render(request, "document_under_review_waiting_room.html", {"session": session})
-    else:
+        return render(
+            request,
+            "document_under_review_waiting_room.html",
+            {"session": session, "reviewed_ids": get_reviewed_ids(session)},
+        )
+    elif session.status == Session.Status.WRITING:
         return render(request, "document_editing.html", context)
+    else:
+        reviews, approved_count, disapproved_count = get_session_results(session)
+        return render(
+            request,
+            "results.html",
+            {
+                "session": session,
+                "reviews": reviews,
+                "approved_count": approved_count,
+                "disapproved_count": disapproved_count,
+            },
+        )
 
 
 def save_document(request):
@@ -92,8 +124,40 @@ def submit_document(request):
     session = get_object_or_404(Session, join_code=request.POST["join_code"])
     session.status = Session.Status.REVIEW
     session.save()
-    return render(request, "document_under_review_waiting_room.html", {"session": session})
+    return render(
+        request,
+        "document_under_review_waiting_room.html",
+        {"session": session, "reviewed_ids": get_reviewed_ids(session)},
+    )
 
 
-def result_phase(request):
+def results(request):
+    session = get_object_or_404(Session, join_code=request.POST["join_code"])
+    reviews, approved_count, disapproved_count = get_session_results(session)
+    return render(
+        request,
+        "results.html",
+        {
+            "session": session,
+            "reviews": reviews,
+            "approved_count": approved_count,
+            "disapproved_count": disapproved_count,
+        },
+    )
+
+
+def mark_complete(request):
     return HttpResponse()
+
+
+def get_reviewed_ids(session):
+    return session.document.reviews.filter(document_revision_snapshot=session.document.revision).values_list(
+        "reviewer_id", flat=True
+    )
+
+
+def get_session_results(session):
+    reviews = session.document.reviews.select_related("reviewer").order_by("-document_revision_snapshot")
+    approved_count = reviews.filter(approved=True).count()
+    disapproved_count = reviews.filter(approved=False).count()
+    return reviews, approved_count, disapproved_count

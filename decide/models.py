@@ -22,6 +22,7 @@ class Session(models.Model):
         WRITING = "WRITING", "Writing"
         REVIEW = "REVIEW", "Review"
         RESULT = "RESULT", "Result"
+        COMPLETE = "COMPLETE", "Complete"
 
     writer = models.ForeignKey(Writer, on_delete=models.CASCADE, related_name="sessions")
     join_code = models.CharField(unique=True, editable=False, max_length=6, default=generate_join_code)

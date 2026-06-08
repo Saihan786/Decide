@@ -149,19 +149,17 @@
         <p class="reviewers-label">Reviewers</p>
         <ul class="reviewers">
             {% for reviewer in session.reviewers.all %}
-                {% with submitted=reviewer.review.exists %}
                 <li>
-                    <span class="dot {% if submitted %}dot-done{% else %}dot-pending{% endif %}"></span>
+                    <span class="dot {% if reviewer.pk in reviewed_ids %}dot-done{% else %}dot-pending{% endif %}"></span>
                     {{ reviewer.first_name }} {{ reviewer.last_name }}
                 </li>
-                {% endwith %}
             {% empty %}
                 <li>No reviewers have joined yet.</li>
             {% endfor %}
         </ul>
 
-        {% if session.reviewers.count > 0 and session.document.reviews.count == session.reviewers.count %}
-            <form action="{% url 'result_phase' %}" method="post">
+        {% if session.reviewers.count > 0 and reviewed_ids|length == session.reviewers.count %}
+            <form action="{% url 'results' %}" method="post">
                 {% csrf_token %}
                 <input type="hidden" name="join_code" value="{{ session.join_code }}">
                 <button type="submit" class="btn">View Results</button>

@@ -164,6 +164,8 @@
             <form id="submit-form" action="{% url 'submit_document' %}" method="post">
                 {% csrf_token %}
                 <input type="hidden" name="join_code" value="{{ session.join_code }}">
+                <input type="hidden" name="first_name" value="{{ writer.first_name }}">
+                <input type="hidden" name="last_name" value="{{ writer.last_name }}">
                 <input type="hidden" name="content" id="submit-content">
                 <button type="submit" class="btn btn-primary">Submit for Review</button>
             </form>

@@ -28,15 +28,33 @@ class JoinSessionViewTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-    def test_join_session_document_under_review(self):
+    def test_join_session_already_reviewed_current_revision_shows_message(self):
         self.session.status = Session.Status.REVIEW
         self.session.save()
+        reviewer = Reviewer.objects.create(first_name="Yusuf", last_name="Khan", session=self.session)
+        document = Document.objects.get(session=self.session)
+        Review.objects.create(reviewer=reviewer, document=document, approved=True, reason="Good.")
+        response = self.client.post("/join/", {"join_code": self.session.join_code, "first_name": "Yusuf", "last_name": "Khan"})
+        self.assertTemplateUsed(response, "home.html")
+        self.assertContains(response, "already been submitted")
 
-        response = self.client.post(
-            "/join/", {"join_code": self.session.join_code, "first_name": "Yusuf", "last_name": "Khan"}
-        )
-        self.assertEqual(response.status_code, 200)
+    def test_join_session_new_revision_allows_review_again(self):
+        self.session.status = Session.Status.REVIEW
+        self.session.save()
+        reviewer = Reviewer.objects.create(first_name="Yusuf", last_name="Khan", session=self.session)
+        document = Document.objects.get(session=self.session)
+        Review.objects.create(reviewer=reviewer, document=document, approved=True, reason="Good.")
+        document.revision = 2
+        document.save()
+        response = self.client.post("/join/", {"join_code": self.session.join_code, "first_name": "Yusuf", "last_name": "Khan"})
         self.assertTemplateUsed(response, "document_under_review.html")
+
+    def test_join_session_result_status_shows_message(self):
+        self.session.status = Session.Status.RESULT
+        self.session.save()
+        response = self.client.post("/join/", {"join_code": self.session.join_code, "first_name": "Yusuf", "last_name": "Khan"})
+        self.assertTemplateUsed(response, "home.html")
+        self.assertContains(response, "can no longer be reviewed")
 
 
 class WriteDocumentViewTests(TestCase):
@@ -67,17 +85,19 @@ class WriteDocumentViewTests(TestCase):
         response = self.client.post("/document/", {"first_name": "Saudia", "last_name": "Begum", "join_code": "000000"})
         self.assertEqual(response.status_code, 404)
 
-    def test_correct_redirect_for_document_under_review_waiting_room(self):
-        Document.objects.create(session=self.session, content="existing content")
+    def test_new_revision_increments_revision(self):
+        Document.objects.create(session=self.session, content="content")
         self.session.status = Session.Status.REVIEW
         self.session.save()
+        self.client.post("/document/", {"join_code": self.session.join_code, "new_revision": "true"})
+        self.assertEqual(Document.objects.get(session=self.session).revision, 2)
 
-        response = self.client.post(
-            "/document/", {"first_name": "Saudia", "last_name": "Begum", "join_code": self.session.join_code}
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "document_under_review_waiting_room.html")
+    def test_new_revision_resets_session_to_writing(self):
+        Document.objects.create(session=self.session, content="content")
+        self.session.status = Session.Status.REVIEW
+        self.session.save()
+        self.client.post("/document/", {"join_code": self.session.join_code, "new_revision": "true"})
+        self.assertEqual(Session.objects.get(pk=self.session.pk).status, Session.Status.WRITING)
 
 
 class SaveDocumentViewTests(TestCase):
@@ -212,3 +232,32 @@ class SubmitReviewViewTests(TestCase):
             },
         )
         self.assertEqual(response.status_code, 200)
+
+
+class ResultsViewTests(TestCase):
+
+    def setUp(self):
+        writer = Writer.objects.create(first_name="Saudia", last_name="Begum")
+        self.session = Session.objects.create(writer=writer, status=Session.Status.RESULT)
+        self.document = Document.objects.create(session=self.session, content="some content")
+        reviewer1 = Reviewer.objects.create(first_name="Yusuf", last_name="Khan", session=self.session)
+        reviewer2 = Reviewer.objects.create(first_name="Aisha", last_name="Ali", session=self.session)
+        Review.objects.create(reviewer=reviewer1, document=self.document, approved=True, reason="Good.")
+        Review.objects.create(reviewer=reviewer2, document=self.document, approved=False, reason="Needs work.")
+
+    def test_results_returns_200(self):
+        response = self.client.post("/document/result/", {"join_code": self.session.join_code})
+        self.assertEqual(response.status_code, 200)
+
+    def test_results_uses_correct_template(self):
+        response = self.client.post("/document/result/", {"join_code": self.session.join_code})
+        self.assertTemplateUsed(response, "results.html")
+
+    def test_results_returns_correct_counts(self):
+        response = self.client.post("/document/result/", {"join_code": self.session.join_code})
+        self.assertEqual(response.context["approved_count"], 1)
+        self.assertEqual(response.context["disapproved_count"], 1)
+
+    def test_results_invalid_join_code_returns_404(self):
+        response = self.client.post("/document/result/", {"join_code": "000000"})
+        self.assertEqual(response.status_code, 404)

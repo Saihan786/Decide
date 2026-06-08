@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decide — Results</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Georgia, serif;
+            background: #F7FAFC;
+            color: #263238;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2.5rem 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            color: #004D40;
+            letter-spacing: 0.05em;
+        }
+
+        header h1 a { color: inherit; text-decoration: none; }
+        header h1 a:hover { opacity: 0.8; }
+
+        header p {
+            margin-top: 0.5rem;
+            color: #546E7A;
+            font-size: 1.1rem;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            gap: 1.25rem;
+            align-items: flex-start;
+        }
+
+        .left {
+            flex: 1;
+            position: sticky;
+            top: 2.5rem;
+        }
+
+        .right {
+            width: 460px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: Georgia, serif;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn-primary { background: #FFB300; color: #1A202C; }
+        .btn-primary:hover { background: #D4AF37; }
+
+        .btn-outline {
+            background: transparent;
+            color: #004D40;
+            border: 2px solid #004D40;
+        }
+
+        .btn-outline:hover { background: #004D40; color: #fff; }
+
+        .card {
+            background: #fff;
+            border: 1px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 1.75rem 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .card h2 {
+            color: #004D40;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .outcome {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+        }
+
+        .outcome-stat {
+            text-align: center;
+        }
+
+        .outcome-stat .count {
+            font-size: 2.5rem;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .outcome-stat .label {
+            font-size: 0.85rem;
+            color: #546E7A;
+            margin-top: 0.25rem;
+        }
+
+        .approved .count  { color: #2E7D32; }
+        .disapproved .count { color: #C62828; }
+
+        .review-item {
+            border-top: 1px solid #F0F0F0;
+            padding: 1rem 0;
+        }
+
+        .review-item:first-child { border-top: none; padding-top: 0; }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .reviewer-name {
+            font-weight: bold;
+            color: #263238;
+        }
+
+        .decision-badge {
+            font-size: 0.8rem;
+            font-weight: bold;
+            padding: 0.2rem 0.65rem;
+            border-radius: 999px;
+        }
+
+        .badge-approved    { background: #E8F5E9; color: #2E7D32; }
+        .badge-disapproved { background: #FFEBEE; color: #C62828; }
+
+        .review-reason {
+            font-size: 0.95rem;
+            color: #263238;
+            line-height: 1.5;
+        }
+
+        .review-comments {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #546E7A;
+            line-height: 1.5;
+            font-style: italic;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><a href="{% url 'home' %}">Decide</a></h1>
+        <p>Collaborative document review, made simple.</p>
+    </header>
+
+    <div class="wrapper">
+
+        <div class="left">
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.75rem;">
+                    <h2 style="margin-bottom:0;">Document</h2>
+                    <span style="font-size:1rem;letter-spacing:0.15em;color:#004D40;font-weight:bold;">{{ session.join_code }}</span>
+                </div>
+                <div style="line-height:1.7;font-size:0.95rem;">{{ session.document.content|safe }}</div>
+            </div>
+        </div>
+
+        <div class="right">
+
+        <div class="card">
+            <h2>Overall Outcome</h2>
+            <div class="outcome">
+                <div class="outcome-stat approved">
+                    <div class="count">{{ approved_count }}</div>
+                    <div class="label">Approved</div>
+                </div>
+                <div class="outcome-stat disapproved">
+                    <div class="count">{{ disapproved_count }}</div>
+                    <div class="label">Disapproved</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="display:flex;flex-direction:column;gap:0.75rem;">
+            <form action="{% url 'write_doc_page' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="join_code" value="{{ session.join_code }}">
+                <input type="hidden" name="first_name" value="{{ session.writer.first_name }}">
+                <input type="hidden" name="last_name" value="{{ session.writer.last_name }}">
+                <input type="hidden" name="new_revision" value="true">
+                <button type="submit" class="btn btn-primary">Start New Revision</button>
+            </form>
+            <form action="{% url 'mark_complete' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="join_code" value="{{ session.join_code }}">
+                <button type="submit" class="btn btn-outline" {% if disapproved_count > 0 %}disabled style="border-color:#E0E0E0;color:#90A4AE;cursor:not-allowed;"{% endif %}>Mark as Complete</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Reviewer Feedback</h2>
+            {% for review in reviews %}
+                <div class="review-item">
+                    <div class="review-header">
+                        <span class="reviewer-name">{{ review.reviewer.first_name }} {{ review.reviewer.last_name }}</span>
+                        <span style="display:flex;align-items:center;gap:0.5rem;">
+                            <span style="font-size:0.75rem;color:#90A4AE;">r{{ review.document_revision_snapshot }}</span>
+                            <span class="decision-badge {% if review.approved %}badge-approved{% else %}badge-disapproved{% endif %}">
+                                {% if review.approved %}Approved{% else %}Disapproved{% endif %}
+                            </span>
+                        </span>
+                    </div>
+                    <p class="review-reason">{{ review.reason }}</p>
+                    {% if review.comments %}
+                        <p class="review-comments">{{ review.comments }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

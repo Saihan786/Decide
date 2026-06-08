@@ -27,5 +27,6 @@ urlpatterns = [
     path("document/", views.write_document, name="write_doc_page"),
     path("document/save/", views.save_document, name="save_document"),
     path("document/submit/", views.submit_document, name="submit_document"),
-    path("document/result/", views.result_phase, name="result_phase"),
+    path("document/result/", views.results, name="results"),
+    path("document/result/mark-complete/", views.mark_complete, name="mark_complete"),
 ]
